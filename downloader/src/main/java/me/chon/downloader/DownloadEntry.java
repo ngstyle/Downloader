@@ -16,9 +16,26 @@ public class DownloadEntry implements Serializable {
     public int currentLength;
     public int totalLength;
 
+    public DownloadEntry(String url) {
+        this.url = url;
+        this.id = url;
+        this.name = url.substring(url.lastIndexOf("/") + 1);
+    }
+
     public enum DownloadStatus{
         idle, waiting, downloading, paused, resumed, cancelled, completed
-        }
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        return this.hashCode() == obj.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 
     @Override
     public String toString() {

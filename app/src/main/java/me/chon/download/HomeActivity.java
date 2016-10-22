@@ -36,10 +36,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         int id = view.getId();
         if (mEntry == null) {
-            mEntry = new DownloadEntry();
-            mEntry.id = "1";
-            mEntry.name = "test.jpg";
-            mEntry.url = "http://api.stay4it.com/uploads/test.jpg";
+            mEntry = new DownloadEntry("http://api.stay4it.com/uploads/test.jpg");
         }
 
         if (id == R.id.download) {

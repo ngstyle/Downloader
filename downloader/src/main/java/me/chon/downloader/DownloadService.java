@@ -2,7 +2,9 @@ package me.chon.downloader;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.annotation.Nullable;
 
 import java.util.HashMap;
@@ -17,6 +19,13 @@ import java.util.concurrent.Executors;
 public class DownloadService extends Service {
     private HashMap<String,DownloadTask> mDownloadingTasks = new HashMap<>();
     private ExecutorService mExecutors;
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            DataChanger.getInstance().postStatus((DownloadEntry) msg.obj);
+        }
+    };
 
     @Nullable
     @Override
@@ -76,7 +85,7 @@ public class DownloadService extends Service {
     }
 
     private void startDownload(DownloadEntry entry) {
-        DownloadTask task = new DownloadTask(entry);
+        DownloadTask task = new DownloadTask(entry,mHandler);
         mDownloadingTasks.put(entry.id,task);
         mExecutors.execute(task);
     }
