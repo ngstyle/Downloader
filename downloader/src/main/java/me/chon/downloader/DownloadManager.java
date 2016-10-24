@@ -19,6 +19,9 @@ public class DownloadManager {
     }
     private static DownloadManager instance;
 
+    private static final int MIN_TIME_INTERVAL = 200;
+    private long mLastOperateTime = 0;
+
     public static DownloadManager getInstance(Context context) {
         if (instance == null) {
             synchronized (DownloadManager.class) {
@@ -36,27 +39,34 @@ public class DownloadManager {
 //        intent.putExtra(Constants.KEY_DOWNLOAD_ENTRY,entry);
 //        intent.putExtra(Constants.KEY_DOWNLOAD_ACTION,Constants.KEY_DOWNLOAD_ACTION_ADD);
 //        mContext.startService(intent);
-        mContext.startService(generateIntent(entry, Constants.KEY_DOWNLOAD_ACTION_ADD));
+        doOperation(entry, Constants.KEY_DOWNLOAD_ACTION_ADD);
     }
 
     public void pause(DownloadEntry entry) {
-        mContext.startService(generateIntent(entry,Constants.KEY_DOWNLOAD_ACTION_PAUSE));
+        doOperation(entry,Constants.KEY_DOWNLOAD_ACTION_PAUSE);
     }
 
     public void resume(DownloadEntry entry) {
-        mContext.startService(generateIntent(entry,Constants.KEY_DOWNLOAD_ACTION_RESUME));
+        doOperation(entry,Constants.KEY_DOWNLOAD_ACTION_RESUME);
     }
 
     public void cancel(DownloadEntry entry) {
-        mContext.startService(generateIntent(entry,Constants.KEY_DOWNLOAD_ACTION_CANCEL));
+        doOperation(entry,Constants.KEY_DOWNLOAD_ACTION_CANCEL);
     }
 
     public void pauseAll() {
-        mContext.startService(generateIntent(null,Constants.KEY_DOWNLOAD_ACTION_PAUSE_ALL));
+        doOperation(null,Constants.KEY_DOWNLOAD_ACTION_PAUSE_ALL);
     }
 
     public void recoverAll() {
-        mContext.startService(generateIntent(null,Constants.KEY_DOWNLOAD_ACTION_RECOVER_ALL));
+        doOperation(null,Constants.KEY_DOWNLOAD_ACTION_RECOVER_ALL);
+    }
+
+    private boolean checkIfExecutable() {
+        long tempTime = System.currentTimeMillis();
+        boolean result = tempTime - mLastOperateTime < MIN_TIME_INTERVAL;
+        mLastOperateTime = tempTime;
+        return result;
     }
 
     public void addObserver(DataWatcher watcher) {
@@ -67,13 +77,16 @@ public class DownloadManager {
         DataChanger.getInstance().deleteObserver(watcher);
     }
 
-    private Intent generateIntent(DownloadEntry entry,String action) {
+    private void doOperation(DownloadEntry entry, String action) {
+        if (checkIfExecutable()) {
+            return;
+        }
         Intent intent = new Intent(mContext,DownloadService.class);
         if (entry != null) {
             intent.putExtra(Constants.KEY_DOWNLOAD_ENTRY,entry);
         }
         intent.putExtra(Constants.KEY_DOWNLOAD_ACTION,action);
-        return intent;
+        mContext.startService(intent);
     }
 
 

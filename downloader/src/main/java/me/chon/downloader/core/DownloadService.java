@@ -7,6 +7,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -153,7 +154,11 @@ public class DownloadService extends Service {
     }
 
     private void recoverAllDownload() {
+        ArrayList<DownloadEntry> mRecoverableEntries = DataChanger.getInstance().queryAllRecoverableEntries();
 
+        for (DownloadEntry entry : mRecoverableEntries) {
+            resumeDownload(entry);
+        }
     }
 
 
