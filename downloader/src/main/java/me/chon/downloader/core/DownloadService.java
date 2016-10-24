@@ -8,6 +8,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,18 +23,20 @@ import me.chon.downloader.DownloadEntry;
  */
 
 public class DownloadService extends Service {
-    private HashMap<String,DownloadTask> mDownloadingTasks = new HashMap<>();
+    private HashMap<String, DownloadTask> mDownloadingTasks = new HashMap<>();
     private LinkedBlockingQueue<DownloadEntry> mWaitingQueue = new LinkedBlockingQueue<>();
     private ExecutorService mExecutors;
-    private Handler mHandler = new Handler(){
+    private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             DownloadEntry entry = (DownloadEntry) msg.obj;
             switch (entry.status) {
+                case completed:
+                    // 任务下载完成后需要及时移除
+                    mDownloadingTasks.remove(entry);
                 case paused:
                 case cancelled:
-                case completed:
                     checkNext();
                     break;
             }
@@ -66,7 +69,7 @@ public class DownloadService extends Service {
         DownloadEntry entry = (DownloadEntry) intent.getSerializableExtra(Constants.KEY_DOWNLOAD_ENTRY);
         String action = intent.getStringExtra(Constants.KEY_DOWNLOAD_ACTION);
 
-        doAction(action,entry);
+        doAction(action, entry);
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -85,6 +88,12 @@ public class DownloadService extends Service {
             case Constants.KEY_DOWNLOAD_ACTION_CANCEL:
                 cancelDownload(entry);
                 break;
+            case Constants.KEY_DOWNLOAD_ACTION_PAUSE_ALL:
+                pauseAllDownload();
+                break;
+            case Constants.KEY_DOWNLOAD_ACTION_RECOVER_ALL:
+                recoverAllDownload();
+                break;
         }
     }
 
@@ -99,8 +108,8 @@ public class DownloadService extends Service {
     }
 
     private void startDownload(DownloadEntry entry) {
-        DownloadTask task = new DownloadTask(entry,mHandler);
-        mDownloadingTasks.put(entry.id,task);
+        DownloadTask task = new DownloadTask(entry, mHandler);
+        mDownloadingTasks.put(entry.id, task);
         mExecutors.execute(task);
     }
 
@@ -129,5 +138,23 @@ public class DownloadService extends Service {
             DataChanger.getInstance().postStatus(entry);
         }
     }
+
+    private void pauseAllDownload() {
+        for(Map.Entry<String,DownloadTask> entry:mDownloadingTasks.entrySet()) {
+            entry.getValue().pause();
+        }
+        mDownloadingTasks.clear();
+
+        while(mWaitingQueue.iterator().hasNext()) {
+            DownloadEntry entry = mWaitingQueue.poll();
+            entry.status = DownloadEntry.DownloadStatus.paused;
+            DataChanger.getInstance().postStatus(entry);
+        }
+    }
+
+    private void recoverAllDownload() {
+
+    }
+
 
 }

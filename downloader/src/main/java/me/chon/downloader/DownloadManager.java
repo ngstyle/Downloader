@@ -51,6 +51,14 @@ public class DownloadManager {
         mContext.startService(generateIntent(entry,Constants.KEY_DOWNLOAD_ACTION_CANCEL));
     }
 
+    public void pauseAll() {
+        mContext.startService(generateIntent(null,Constants.KEY_DOWNLOAD_ACTION_PAUSE_ALL));
+    }
+
+    public void recoverAll() {
+        mContext.startService(generateIntent(null,Constants.KEY_DOWNLOAD_ACTION_RECOVER_ALL));
+    }
+
     public void addObserver(DataWatcher watcher) {
         DataChanger.getInstance().addObserver(watcher);
     }
@@ -61,8 +69,12 @@ public class DownloadManager {
 
     private Intent generateIntent(DownloadEntry entry,String action) {
         Intent intent = new Intent(mContext,DownloadService.class);
-        intent.putExtra(Constants.KEY_DOWNLOAD_ENTRY,entry);
+        if (entry != null) {
+            intent.putExtra(Constants.KEY_DOWNLOAD_ENTRY,entry);
+        }
         intent.putExtra(Constants.KEY_DOWNLOAD_ACTION,action);
         return intent;
     }
+
+
 }

@@ -14,8 +14,8 @@ import me.chon.downloader.DownloadEntry;
 public class DownloadTask implements Runnable{
     private final DownloadEntry mEntry;
     private final Handler mHandler;
-    private boolean isPaused;
-    private boolean isCancelled;
+    private volatile boolean isPaused;
+    private volatile boolean isCancelled;
 
     public DownloadTask(DownloadEntry entry, Handler mHandler) {
         this.mEntry = entry;
@@ -33,8 +33,6 @@ public class DownloadTask implements Runnable{
         mEntry.totalLength = 1024 * 100;
 
         while(mEntry.currentLength < mEntry.totalLength) {
-            SystemClock.sleep(200);
-
             if (isCancelled || isPaused) {
                 // TODO if cancelled,del file,if paused,record process
                 mEntry.status = isCancelled ? DownloadEntry.DownloadStatus.cancelled : DownloadEntry.DownloadStatus.paused;
@@ -51,6 +49,8 @@ public class DownloadTask implements Runnable{
             message = mHandler.obtainMessage();
             message.obj = mEntry;
             mHandler.sendMessage(message);
+
+            SystemClock.sleep(200);
         }
 
 

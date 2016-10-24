@@ -12,6 +12,8 @@ public class Constants {
     public static final String KEY_DOWNLOAD_ACTION_PAUSE = "key_download_action_pause";
     public static final String KEY_DOWNLOAD_ACTION_RESUME = "key_download_action_resume";
     public static final String KEY_DOWNLOAD_ACTION_CANCEL = "key_download_action_cancel";
+    public static final String KEY_DOWNLOAD_ACTION_PAUSE_ALL = "key_download_action_pause_all";
+    public static final String KEY_DOWNLOAD_ACTION_RECOVER_ALL = "key_download_action_recover_all";
 
     public static final String KEY_DOWNLOAD_ENTRY = "key_download_entry";
     public static final int MAX_DOWNLOAD_TASKS = 3;

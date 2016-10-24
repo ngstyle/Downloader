@@ -4,8 +4,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -62,6 +65,20 @@ public class ListActivity extends AppCompatActivity {
         mDownloadLsv = (ListView) findViewById(R.id.mDownloadLsv);
         adapter = new DownloadAdapter();
         mDownloadLsv.setAdapter(adapter);
+
+        mDownloadLsv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                DownloadEntry entry = mDownloadEntries.get(i);
+                if (entry.status == DownloadEntry.DownloadStatus.idle || entry.status == DownloadEntry.DownloadStatus.cancelled) {
+                    mDownloadManager.add(entry);
+                } else if (entry.status == DownloadEntry.DownloadStatus.downloading || entry.status == DownloadEntry.DownloadStatus.waiting) {
+                    mDownloadManager.pause(entry);
+                } else if (entry.status == DownloadEntry.DownloadStatus.paused) {
+                    mDownloadManager.resume(entry);
+                }
+            }
+        });
     }
 
     @Override
@@ -111,18 +128,6 @@ public class ListActivity extends AppCompatActivity {
             holder.mDownloadLabel.setText(entry.name + " is " + entry.status + " "
                     + Formatter.formatShortFileSize(getApplicationContext(), entry.currentLength)
                     + "/" + Formatter.formatShortFileSize(getApplicationContext(), entry.totalLength));
-            holder.mDownloadBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (entry.status == DownloadEntry.DownloadStatus.idle || entry.status == DownloadEntry.DownloadStatus.cancelled) {
-                        mDownloadManager.add(entry);
-                    } else if (entry.status == DownloadEntry.DownloadStatus.downloading || entry.status == DownloadEntry.DownloadStatus.waiting) {
-                        mDownloadManager.pause(entry);
-                    } else if (entry.status == DownloadEntry.DownloadStatus.paused) {
-                        mDownloadManager.resume(entry);
-                    }
-                }
-            });
             return convertView;
         }
     }
@@ -132,4 +137,31 @@ public class ListActivity extends AppCompatActivity {
         Button mDownloadBtn;
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            if (item.getTitle().equals("pause all")) {
+                item.setTitle(R.string.action_recover_all);
+                mDownloadManager.pauseAll();
+            } else {
+                item.setTitle(R.string.action_pause_all);
+                mDownloadManager.recoverAll();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

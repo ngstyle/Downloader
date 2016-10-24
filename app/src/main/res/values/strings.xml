@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Download</string>
-    <string name="hello_world">hello</string>
+    <string name="hello_world">download</string>
+    <string name="download">d</string>
+    <string name="pause">pause</string>
+    <string name="cancel">cancel</string>
+    <string name="action_pause_all">pause all</string>
+    <string name="action_recover_all">recover all</string>
 </resources>
