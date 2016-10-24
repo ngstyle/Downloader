@@ -1,4 +1,4 @@
-package me.chon.downloader;
+package me.chon.downloader.core;
 
 /**
  * Created by chon on 2016/10/21.

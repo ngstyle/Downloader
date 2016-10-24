@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import me.chon.downloader.DataWatcher;
+import me.chon.downloader.notify.DataWatcher;
 import me.chon.downloader.DownloadEntry;
 import me.chon.downloader.DownloadManager;
 import me.chon.downloader.util.Trace;

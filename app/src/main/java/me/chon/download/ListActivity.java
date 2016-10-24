@@ -1,7 +1,6 @@
 package me.chon.download;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
@@ -14,7 +13,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import me.chon.downloader.DataWatcher;
+import me.chon.downloader.notify.DataWatcher;
 import me.chon.downloader.DownloadEntry;
 import me.chon.downloader.DownloadManager;
 import me.chon.downloader.util.Trace;

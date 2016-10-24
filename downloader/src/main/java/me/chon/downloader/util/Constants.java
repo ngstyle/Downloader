@@ -1,4 +1,4 @@
-package me.chon.downloader;
+package me.chon.downloader.util;
 
 /**
  * Created by chon on 2016/10/21.
@@ -13,7 +13,6 @@ public class Constants {
     public static final String KEY_DOWNLOAD_ACTION_RESUME = "key_download_action_resume";
     public static final String KEY_DOWNLOAD_ACTION_CANCEL = "key_download_action_cancel";
 
-
-
     public static final String KEY_DOWNLOAD_ENTRY = "key_download_entry";
+    public static final int MAX_DOWNLOAD_TASKS = 3;
 }

@@ -1,8 +1,10 @@
-package me.chon.downloader;
+package me.chon.downloader.core;
 
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+
+import me.chon.downloader.DownloadEntry;
 
 /**
  * Created by chon on 2016/10/21.

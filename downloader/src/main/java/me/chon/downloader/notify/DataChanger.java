@@ -1,6 +1,8 @@
-package me.chon.downloader;
+package me.chon.downloader.notify;
 
 import java.util.Observable;
+
+import me.chon.downloader.DownloadEntry;
 
 /**
  * Created by chon on 2016/10/21.

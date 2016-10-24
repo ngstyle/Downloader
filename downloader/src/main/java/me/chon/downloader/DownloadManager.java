@@ -3,6 +3,11 @@ package me.chon.downloader;
 import android.content.Context;
 import android.content.Intent;
 
+import me.chon.downloader.core.DownloadService;
+import me.chon.downloader.notify.DataChanger;
+import me.chon.downloader.notify.DataWatcher;
+import me.chon.downloader.util.Constants;
+
 /**
  * Created by chon on 2016/10/21.
  * What? How? Why?
@@ -31,7 +36,7 @@ public class DownloadManager {
 //        intent.putExtra(Constants.KEY_DOWNLOAD_ENTRY,entry);
 //        intent.putExtra(Constants.KEY_DOWNLOAD_ACTION,Constants.KEY_DOWNLOAD_ACTION_ADD);
 //        mContext.startService(intent);
-        mContext.startService(generateIntent(entry,Constants.KEY_DOWNLOAD_ACTION_ADD));
+        mContext.startService(generateIntent(entry, Constants.KEY_DOWNLOAD_ACTION_ADD));
     }
 
     public void pause(DownloadEntry entry) {
