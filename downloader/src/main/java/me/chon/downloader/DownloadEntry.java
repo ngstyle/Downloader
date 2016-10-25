@@ -1,20 +1,28 @@
 package me.chon.downloader;
 
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.io.Serializable;
 
 /**
  * Created by chon on 2016/10/21.
  * What? How? Why?
  */
-
+@DatabaseTable(tableName = "downloadentry")
 public class DownloadEntry implements Serializable {
+    @DatabaseField(id = true)
     public String id;
+    @DatabaseField
     public String name;
+    @DatabaseField
     public String url;
-    public DownloadStatus status = DownloadStatus.idle;
-
+    @DatabaseField
     public int currentLength;
+    @DatabaseField
     public int totalLength;
+    @DatabaseField
+    public DownloadStatus status = DownloadStatus.idle;
 
     public DownloadEntry(String url) {
         this.url = url;
@@ -22,10 +30,13 @@ public class DownloadEntry implements Serializable {
         this.name = url.substring(url.lastIndexOf("/") + 1);
     }
 
+    public DownloadEntry() {
+
+    }
+
     public enum DownloadStatus{
         idle, waiting, downloading, paused, resumed, cancelled, completed
     }
-
 
     @Override
     public boolean equals(Object obj) {

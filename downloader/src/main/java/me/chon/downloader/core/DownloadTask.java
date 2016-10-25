@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 
+import java.util.Random;
+
 import me.chon.downloader.DownloadEntry;
 
 /**
@@ -24,11 +26,7 @@ public class DownloadTask implements Runnable{
 
     public void start() {
         mEntry.status = DownloadEntry.DownloadStatus.downloading;
-//        DataChanger.getInstance().postStatus(mEntry);
-
-        Message message = mHandler.obtainMessage();
-        message.obj = mEntry;
-        mHandler.sendMessage(message);
+        notifyUpdate();
 
         mEntry.totalLength = 1024 * 100;
 
@@ -36,31 +34,26 @@ public class DownloadTask implements Runnable{
             if (isCancelled || isPaused) {
                 // TODO if cancelled,del file,if paused,record process
                 mEntry.status = isCancelled ? DownloadEntry.DownloadStatus.cancelled : DownloadEntry.DownloadStatus.paused;
-
-//                DataChanger.getInstance().postStatus(mEntry);
-                message = mHandler.obtainMessage();
-                message.obj = mEntry;
-                mHandler.sendMessage(message);
+                notifyUpdate();
                 return;
             }
 
             mEntry.currentLength += 1024;
 //            DataChanger.getInstance().postStatus(mEntry);
-            message = mHandler.obtainMessage();
-            message.obj = mEntry;
-            mHandler.sendMessage(message);
+            notifyUpdate();
 
             SystemClock.sleep(200);
         }
-
-
+        
         mEntry.status = DownloadEntry.DownloadStatus.completed;
-//        DataChanger.getInstance().postStatus(mEntry);
-        message = mHandler.obtainMessage();
+        notifyUpdate();
+    }
+
+    private void notifyUpdate() {
+        Message message = mHandler.obtainMessage();
         message.obj = mEntry;
         mHandler.sendMessage(message);
     }
-
 
     public void pause() {
         isPaused = true;

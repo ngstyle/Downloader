@@ -1,11 +1,14 @@
 package me.chon.downloader.notify;
 
+import android.content.Context;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Observable;
 
 import me.chon.downloader.DownloadEntry;
+import me.chon.downloader.db.DBController;
 
 /**
  * Created by chon on 2016/10/21.
@@ -14,19 +17,20 @@ import me.chon.downloader.DownloadEntry;
  */
 
 public class DataChanger extends Observable {
+    private Context mContext;
+    private LinkedHashMap<String,DownloadEntry> mOperatedEntries;
 
-    private LinkedHashMap<String,DownloadEntry> mOperationEntries;
-
-    private DataChanger() {
-        mOperationEntries = new LinkedHashMap<>();
+    private DataChanger(Context context) {
+        this.mContext = context;
+        mOperatedEntries = new LinkedHashMap<>();
     }
 
     private static DataChanger instance;
-    public static DataChanger getInstance() {
+    public static DataChanger getInstance(Context context) {
         if (instance == null) {
             synchronized (DataChanger.class) {
                 if (instance == null) {
-                    instance = new DataChanger();
+                    instance = new DataChanger(context);
                 }
             }
         }
@@ -34,7 +38,11 @@ public class DataChanger extends Observable {
     }
 
     public void postStatus(DownloadEntry entry) {
-        mOperationEntries.put(entry.id,entry);
+        // save to the memory
+        mOperatedEntries.put(entry.id,entry);
+
+        // save to db
+        DBController.getInstance(mContext).newOrUpdate(entry);
 
         setChanged();
         notifyObservers(entry);
@@ -43,12 +51,20 @@ public class DataChanger extends Observable {
     public ArrayList<DownloadEntry> queryAllRecoverableEntries() {
         ArrayList<DownloadEntry> mRecoverableEntries = new ArrayList<>();
 
-        for (Map.Entry<String,DownloadEntry> entry:mOperationEntries.entrySet()) {
+        for (Map.Entry<String,DownloadEntry> entry: mOperatedEntries.entrySet()) {
             if (entry.getValue().status == DownloadEntry.DownloadStatus.paused) {
                 mRecoverableEntries.add(entry.getValue());
             }
         }
 
         return  mRecoverableEntries;
+    }
+
+    public DownloadEntry queryDownloadEntryByID(String id) {
+        return mOperatedEntries.get(id);
+    }
+
+    public void addToOperateEntryMap(String id,DownloadEntry entry) {
+        mOperatedEntries.put(id,entry);
     }
 }

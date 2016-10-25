@@ -62,6 +62,20 @@ public class ListActivity extends AppCompatActivity {
         mDownloadEntries.add(new DownloadEntry("http://shouji.360tpcdn.com/150716/aea8ca0e6617b0989d3dcce0bb9877d5/com.cmge.xianjian.a360_306.apk"));
         mDownloadEntries.add(new DownloadEntry("http://shouji.360tpcdn.com/150716/aea8ca0e6617b0989d3dcce0bb9877d5/com.cmge.xianjian.a360_307.apk"));
         mDownloadEntries.add(new DownloadEntry("http://shouji.360tpcdn.com/150716/aea8ca0e6617b0989d3dcce0bb9877d5/com.cmge.xianjian.a360_308.apk"));
+
+
+        DownloadEntry entry;
+        DownloadEntry realEntry;
+        for (int i = 0; i < mDownloadEntries.size(); i++) {
+            entry = mDownloadEntries.get(i);
+            realEntry = mDownloadManager.queryDownloadEntry(entry.id);
+            if (realEntry != null) {
+                mDownloadEntries.remove(i);
+                mDownloadEntries.add(i,realEntry);
+            }
+        }
+
+
         mDownloadLsv = (ListView) findViewById(R.id.mDownloadLsv);
         adapter = new DownloadAdapter();
         mDownloadLsv.setAdapter(adapter);

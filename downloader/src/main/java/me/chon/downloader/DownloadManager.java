@@ -16,12 +16,15 @@ import me.chon.downloader.util.Constants;
 public class DownloadManager {
     private DownloadManager(Context context){
         this.mContext = context;
+        mDataChanger = DataChanger.getInstance(context);
+        context.startService(new Intent(context,DownloadService.class));
     }
-    private static DownloadManager instance;
 
+    private DataChanger mDataChanger;
     private static final int MIN_TIME_INTERVAL = 200;
     private long mLastOperateTime = 0;
 
+    private static DownloadManager instance;
     public static DownloadManager getInstance(Context context) {
         if (instance == null) {
             synchronized (DownloadManager.class) {
@@ -35,10 +38,6 @@ public class DownloadManager {
     private Context mContext;
 
     public void add(DownloadEntry entry) {
-//        Intent intent = new Intent(mContext,DownloadService.class);
-//        intent.putExtra(Constants.KEY_DOWNLOAD_ENTRY,entry);
-//        intent.putExtra(Constants.KEY_DOWNLOAD_ACTION,Constants.KEY_DOWNLOAD_ACTION_ADD);
-//        mContext.startService(intent);
         doOperation(entry, Constants.KEY_DOWNLOAD_ACTION_ADD);
     }
 
@@ -70,11 +69,11 @@ public class DownloadManager {
     }
 
     public void addObserver(DataWatcher watcher) {
-        DataChanger.getInstance().addObserver(watcher);
+        mDataChanger.addObserver(watcher);
     }
 
     public void removeObserver(DataWatcher watcher) {
-        DataChanger.getInstance().deleteObserver(watcher);
+        mDataChanger.deleteObserver(watcher);
     }
 
     private void doOperation(DownloadEntry entry, String action) {
@@ -89,5 +88,8 @@ public class DownloadManager {
         mContext.startService(intent);
     }
 
+    public DownloadEntry queryDownloadEntry(String id) {
+        return mDataChanger.queryDownloadEntryByID(id);
+    }
 
 }
