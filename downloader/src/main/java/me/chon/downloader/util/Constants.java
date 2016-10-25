@@ -17,4 +17,6 @@ public class Constants {
 
     public static final String KEY_DOWNLOAD_ENTRY = "key_download_entry";
     public static final int MAX_DOWNLOAD_TASKS = 3;
+    public static final int CONNECT_TIME = 10 * 1000;
+    public static final int READ_TIME = 10 * 1000;
 }

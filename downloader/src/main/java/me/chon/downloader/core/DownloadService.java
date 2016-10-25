@@ -26,6 +26,14 @@ import me.chon.downloader.DownloadEntry;
  */
 
 public class DownloadService extends Service {
+    public static final int NOTIFY_DOWNLOADING = 1;
+    public static final int NOTIFY_UPDATING = 2;
+    public static final int NOTIFY_PAUSED_OR_CANCELLED = 3;
+    public static final int NOTIFY_COMPLETED = 4;
+    public static final int NOTIFY_CONNECTING = 5;
+    //    1. net error 2. no sd 3. no memory
+    public static final int NOTIFY_ERROR = 6;
+
     private HashMap<String, DownloadTask> mDownloadingTasks = new HashMap<>();
     private LinkedBlockingQueue<DownloadEntry> mWaitingQueue = new LinkedBlockingQueue<>();
     private ExecutorService mExecutors;
@@ -35,12 +43,20 @@ public class DownloadService extends Service {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             DownloadEntry entry = (DownloadEntry) msg.obj;
-            switch (entry.status) {
-                case completed:
-                    // completed task needs to be removed.
-                    mDownloadingTasks.remove(entry);
-                case paused:
-                case cancelled:
+//            switch (entry.status) {
+//                case completed:
+//                    // completed task needs to be removed.
+//                    mDownloadingTasks.remove(entry);
+//                case paused:
+//                case cancelled:
+//                    checkNext();
+//                    break;
+//            }
+            switch (msg.what) {
+                case NOTIFY_COMPLETED:
+                    mDownloadingTasks.remove(entry.id);
+                case NOTIFY_PAUSED_OR_CANCELLED:
+                case NOTIFY_ERROR:
                     checkNext();
                     break;
             }
@@ -130,9 +146,9 @@ public class DownloadService extends Service {
     }
 
     private void startDownload(DownloadEntry entry) {
-        DownloadTask task = new DownloadTask(entry, mHandler);
+        DownloadTask task = new DownloadTask(entry, mHandler,mExecutors);
+        task.start();
         mDownloadingTasks.put(entry.id, task);
-        mExecutors.execute(task);
     }
 
     private void pauseDownload(DownloadEntry entry) {

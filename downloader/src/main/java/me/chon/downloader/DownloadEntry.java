@@ -23,6 +23,8 @@ public class DownloadEntry implements Serializable {
     public int totalLength;
     @DatabaseField
     public DownloadStatus status = DownloadStatus.idle;
+    @DatabaseField
+    public boolean isSupportRange;
 
     public DownloadEntry(String url) {
         this.url = url;
@@ -35,7 +37,7 @@ public class DownloadEntry implements Serializable {
     }
 
     public enum DownloadStatus{
-        idle, waiting, downloading, paused, resumed, cancelled, completed
+        idle, connecting,waiting, downloading, paused, resumed, cancelled, completed, error
     }
 
     @Override

@@ -63,7 +63,6 @@ public class ListActivity extends AppCompatActivity {
         mDownloadEntries.add(new DownloadEntry("http://shouji.360tpcdn.com/150716/aea8ca0e6617b0989d3dcce0bb9877d5/com.cmge.xianjian.a360_307.apk"));
         mDownloadEntries.add(new DownloadEntry("http://shouji.360tpcdn.com/150716/aea8ca0e6617b0989d3dcce0bb9877d5/com.cmge.xianjian.a360_308.apk"));
 
-
         DownloadEntry entry;
         DownloadEntry realEntry;
         for (int i = 0; i < mDownloadEntries.size(); i++) {
