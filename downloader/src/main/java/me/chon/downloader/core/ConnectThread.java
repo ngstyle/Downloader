@@ -53,7 +53,6 @@ public class ConnectThread implements Runnable {
         } catch (IOException e) {
             isRunning = false;
             listener.onConnectError(e.getMessage());
-//            e.printStackTrace();
         }finally {
             if (connection != null){
                 connection.disconnect();

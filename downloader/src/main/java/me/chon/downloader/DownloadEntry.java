@@ -1,9 +1,14 @@
 package me.chon.downloader;
 
+import android.util.SparseIntArray;
+
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.prefs.Preferences;
 
 /**
  * Created by chon on 2016/10/21.
@@ -25,6 +30,10 @@ public class DownloadEntry implements Serializable {
     public DownloadStatus status = DownloadStatus.idle;
     @DatabaseField
     public boolean isSupportRange;
+    @DatabaseField
+    public int percent;
+    @DatabaseField(dataType = DataType.SERIALIZABLE)
+    public HashMap<Integer,Integer> ranges;
 
     public DownloadEntry(String url) {
         this.url = url;
@@ -52,11 +61,11 @@ public class DownloadEntry implements Serializable {
 
     @Override
     public String toString() {
-        return "DownloadEntry{" +
-                ", name='" + name + '\'' +
-                ", url='" + url + '\'' +
+        return "{" +
+                "name='" + name + '\'' +
                 ", status=" + status + '\'' +
                 ", " + currentLength + "/" +totalLength +
+                ", percent = " + percent + "%" +
                 '}';
     }
 }

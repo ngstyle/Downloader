@@ -36,7 +36,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         int id = view.getId();
         if (mEntry == null) {
-            mEntry = new DownloadEntry("http://api.stay4it.com/uploads/test.jpg");
+//            mEntry = new DownloadEntry("http://gdown.baidu.com/data/wisegame/0d89baa0cf1f8baa/baidushoujizhushou_16792112.apk");
+//            mEntry = new DownloadEntry("http://shouji.360tpcdn.com/150707/2ef5e16e0b8b3135aa714ad9b56b9a3d/com.happyelements.AndroidAnimal_25.apk");
+            mEntry = new DownloadEntry("http://shouji.360tpcdn.com/150723/de6fd89a346e304f66535b6d97907563/com.sina.weibo_2057.apk");
+//            mEntry = new DownloadEntry("http://api.stay4it.com/uploads/test.jpg");
         }
 
         if (id == R.id.download) {
