@@ -45,6 +45,12 @@ public class DownloadEntry implements Serializable {
 
     }
 
+    public void reset() {
+        percent = 0;
+        currentLength = 0;
+        ranges = null;
+    }
+
     public enum DownloadStatus{
         idle, connecting,waiting, downloading, paused, resumed, cancelled, completed, error
     }

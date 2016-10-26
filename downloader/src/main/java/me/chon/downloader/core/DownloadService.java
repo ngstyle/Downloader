@@ -103,8 +103,12 @@ public class DownloadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         DownloadEntry entry = (DownloadEntry) intent.getSerializableExtra(Constants.KEY_DOWNLOAD_ENTRY);
-        String action = intent.getStringExtra(Constants.KEY_DOWNLOAD_ACTION);
+        if (entry != null && mDataChanger.containsDownloadEntry(entry.id)) {
+            // set the real status entry
+            entry = mDataChanger.queryDownloadEntryByID(entry.id);
+        }
 
+        String action = intent.getStringExtra(Constants.KEY_DOWNLOAD_ACTION);
         if (!TextUtils.isEmpty(action)) {
             doAction(action, entry);
         }

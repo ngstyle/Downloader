@@ -24,7 +24,8 @@ public class DownloadThread implements Runnable {
     private final String path;
     private final DownloadListener listener;
     private final int index;
-    private boolean isPaused;
+    private volatile boolean isPaused;
+    private volatile boolean isCancelled;
 
     private DownloadEntry.DownloadStatus mStatus;
 
@@ -64,7 +65,7 @@ public class DownloadThread implements Runnable {
                 byte[] buffer = new byte[2048];
                 int len = -1;
                 while ((len = is.read(buffer)) != -1) {
-                    if (isPaused) {
+                    if (isPaused || isCancelled) {
                         break;
                     }
                     raf.write(buffer, 0, len);
@@ -77,6 +78,9 @@ public class DownloadThread implements Runnable {
             if (isPaused) {
                 mStatus = DownloadEntry.DownloadStatus.paused;
                 listener.onDownloadPaused(index);
+            } else if (isCancelled) {
+                mStatus = DownloadEntry.DownloadStatus.cancelled;
+                listener.onDownloadCancelled(index);
             } else {
                 mStatus = DownloadEntry.DownloadStatus.completed;
                 listener.onDownloadCompleted(index);
@@ -86,6 +90,9 @@ public class DownloadThread implements Runnable {
             if (isPaused) {
                 mStatus = DownloadEntry.DownloadStatus.paused;
                 listener.onDownloadPaused(index);
+            } else if (isCancelled) {
+                mStatus = DownloadEntry.DownloadStatus.cancelled;
+                listener.onDownloadCancelled(index);
             } else {
                 mStatus = DownloadEntry.DownloadStatus.error;
                 listener.onDownloadError(e.getMessage());
@@ -110,6 +117,15 @@ public class DownloadThread implements Runnable {
         return mStatus == DownloadEntry.DownloadStatus.downloading;
     }
 
+    public void cancel() {
+        isCancelled = true;
+        Thread.currentThread().interrupt();
+    }
+
+    public boolean isCancelled() {
+        return mStatus == DownloadEntry.DownloadStatus.cancelled || mStatus == DownloadEntry.DownloadStatus.completed;
+    }
+
     interface DownloadListener{
         void onProgressChanged(int index, int progress);
 
@@ -118,6 +134,8 @@ public class DownloadThread implements Runnable {
         void onDownloadError(String message);
 
         void onDownloadPaused(int index);
+
+        void onDownloadCancelled(int index);
     }
 }
 

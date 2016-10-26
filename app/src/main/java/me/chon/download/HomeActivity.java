@@ -16,9 +16,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void notifyUpdate(DownloadEntry entry) {
             mEntry = entry;
-            if (mEntry.status == DownloadEntry.DownloadStatus.cancelled) {
-                mEntry = null;
-            }
+//            if (mEntry.status == DownloadEntry.DownloadStatus.cancelled) {
+//                mEntry = null;
+//            }
             Trace.e(entry.toString());
         }
     };
@@ -44,7 +44,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
         if (id == R.id.download) {
 
-            if (mEntry.status == DownloadEntry.DownloadStatus.idle) {
+            if (mEntry.status == DownloadEntry.DownloadStatus.idle || mEntry.status == DownloadEntry.DownloadStatus.cancelled) {
                 DownloadManager.getInstance(this).add(mEntry);
             } else if (mEntry.status == DownloadEntry.DownloadStatus.downloading) {
                 DownloadManager.getInstance(this).pause(mEntry);

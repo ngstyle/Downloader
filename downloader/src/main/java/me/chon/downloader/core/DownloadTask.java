@@ -1,10 +1,12 @@
 package me.chon.downloader.core;
 
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.SparseIntArray;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 
@@ -32,11 +34,24 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     public void start() {
-        // check if support range and get content-length
-        mEntry.status = DownloadEntry.DownloadStatus.connecting;
-        notifyUpdate(DownloadService.NOTIFY_CONNECTING);
-        mConnectThread = new ConnectThread(mEntry.url,this);
-        mExecutors.execute(mConnectThread);
+        if (mEntry.totalLength > 0) {
+            Trace.e("no need to check if support range and totalLength");
+            startDownload();
+        } else {
+            // check if support range and get content-length
+            mEntry.status = DownloadEntry.DownloadStatus.connecting;
+            notifyUpdate(DownloadService.NOTIFY_CONNECTING);
+            mConnectThread = new ConnectThread(mEntry.url, this);
+            mExecutors.execute(mConnectThread);
+        }
+    }
+
+    private void startDownload() {
+        if (mEntry.isSupportRange) {
+            startMultiDownload();
+        } else {
+            startSingleDownload();
+        }
     }
 
     private void notifyUpdate(int what) {
@@ -63,6 +78,14 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     public void cancel() {
         if (mConnectThread != null && mConnectThread.isRunning()) {
             mConnectThread.cancel();
+        }
+
+        if (mDownloadThreads != null) {
+            for (DownloadThread mDownloadThread : mDownloadThreads) {
+                if (mDownloadThread != null && mDownloadThread.isRunning()) {
+                    mDownloadThread.cancel();
+                }
+            }
         }
     }
 
@@ -104,11 +127,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
         mEntry.isSupportRange = isSupportRange;
         mEntry.totalLength = totalLength;
 
-        if (isSupportRange) {
-            startMultiDownload();
-        } else {
-            startSingleDownload();
-        }
+        startDownload();
     }
 
     @Override
@@ -153,6 +172,27 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
         }
 
         mEntry.status = DownloadEntry.DownloadStatus.paused;
+        notifyUpdate(DownloadService.NOTIFY_PAUSED_OR_CANCELLED);
+    }
+
+    @Override
+    public void onDownloadCancelled(int index) {
+        for (DownloadThread mDownloadThread : mDownloadThreads) {
+            if (mDownloadThread != null & !mDownloadThread.isCancelled()) {
+                return;
+            }
+        }
+
+        // reset mEntry,delete local file
+        mEntry.reset();
+        String path = Environment.getExternalStorageDirectory() + File.separator +
+                "downloader" + File.separator + mEntry.url.substring(mEntry.url.lastIndexOf("/"));
+        File file = new File(path);
+        if (file.exists()) {
+            file.delete();
+        }
+
+        mEntry.status = DownloadEntry.DownloadStatus.cancelled;
         notifyUpdate(DownloadService.NOTIFY_PAUSED_OR_CANCELLED);
     }
 
