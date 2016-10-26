@@ -23,6 +23,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     private ExecutorService mExecutors;
 
     private ConnectThread mConnectThread;
+    private DownloadThread[] mDownloadThreads;
 
     public DownloadTask(DownloadEntry entry, Handler mHandler, ExecutorService mExecutors) {
         this.mEntry = entry;
@@ -48,6 +49,14 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     public void pause() {
         if (mConnectThread != null && mConnectThread.isRunning()) {
             mConnectThread.cancel();
+        }
+
+        if (mDownloadThreads != null) {
+            for (DownloadThread mDownloadThread : mDownloadThreads) {
+                if (mDownloadThread != null && mDownloadThread.isRunning()) {
+                    mDownloadThread.pause();
+                }
+            }
         }
     }
 
@@ -75,6 +84,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
             }
         }
 
+        mDownloadThreads = new DownloadThread[Constants.MAX_DOWNLOAD_THREADS];
         for (int i = 0; i < Constants.MAX_DOWNLOAD_THREADS; i++) {
             startPos = i * block + mEntry.ranges.get(i);
             if (i == Constants.MAX_DOWNLOAD_THREADS - 1) {
@@ -83,8 +93,8 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
                 endPos = (i + 1) * block - 1;
             }
             if (startPos < endPos) {
-                DownloadThread downloadThread = new DownloadThread(mEntry.url,i,startPos,endPos,this);
-                mExecutors.execute(downloadThread);
+                mDownloadThreads[i] = new DownloadThread(mEntry.url,i,startPos,endPos,this);
+                mExecutors.execute(mDownloadThreads[i]);
             }
         }
     }
@@ -110,7 +120,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     @Override
-    public void onProgressChanged(int index, int progress) {
+    public synchronized void onProgressChanged(int index, int progress) {
         int range = mEntry.ranges.get(index) + progress;
         mEntry.ranges.put(index, range);
 
@@ -119,7 +129,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
             mEntry.percent = 100;
             mEntry.status = DownloadEntry.DownloadStatus.completed;
             notifyUpdate(DownloadService.NOTIFY_COMPLETED);
-        }else {
+        } else {
             int percent = (int) (mEntry.currentLength * 100l / mEntry.totalLength);
             if (percent > mEntry.percent) {
                 mEntry.percent = percent;
@@ -132,6 +142,18 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     @Override
     public void onDownloadCompleted(int index) {
         Trace.e("Thread " + index + " completed: " + mEntry.ranges.get(index));
+    }
+
+    @Override
+    public void onDownloadPaused(int index) {
+        for (DownloadThread mDownloadThread : mDownloadThreads) {
+            if (mDownloadThread != null & !mDownloadThread.isPaused()) {
+                return;
+            }
+        }
+
+        mEntry.status = DownloadEntry.DownloadStatus.paused;
+        notifyUpdate(DownloadService.NOTIFY_PAUSED_OR_CANCELLED);
     }
 
     @Override

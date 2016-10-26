@@ -63,7 +63,7 @@ public class DownloadEntry implements Serializable {
     public String toString() {
         return "{" +
                 "name='" + name + '\'' +
-                ", status=" + status + '\'' +
+                ", status=" + status +
                 ", " + currentLength + "/" +totalLength +
                 ", percent = " + percent + "%" +
                 '}';

@@ -9,6 +9,7 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import me.chon.downloader.DownloadEntry;
 import me.chon.downloader.util.Constants;
 
 /**
@@ -23,6 +24,9 @@ public class DownloadThread implements Runnable {
     private final String path;
     private final DownloadListener listener;
     private final int index;
+    private boolean isPaused;
+
+    private DownloadEntry.DownloadStatus mStatus;
 
     public DownloadThread(String url,int index, int startPos, int endPos,DownloadListener listener) {
         this.url = url;
@@ -36,6 +40,7 @@ public class DownloadThread implements Runnable {
 
     @Override
     public void run() {
+        mStatus = DownloadEntry.DownloadStatus.downloading;
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(url).openConnection();
@@ -59,20 +64,50 @@ public class DownloadThread implements Runnable {
                 byte[] buffer = new byte[2048];
                 int len = -1;
                 while ((len = is.read(buffer)) != -1) {
+                    if (isPaused) {
+                        break;
+                    }
                     raf.write(buffer, 0, len);
                     listener.onProgressChanged(index,len);
                 }
                 raf.close();
                 is.close();
             }
-            listener.onDownloadCompleted(index);
+
+            if (isPaused) {
+                mStatus = DownloadEntry.DownloadStatus.paused;
+                listener.onDownloadPaused(index);
+            } else {
+                mStatus = DownloadEntry.DownloadStatus.completed;
+                listener.onDownloadCompleted(index);
+            }
+
         } catch (IOException e) {
-            listener.onDownloadError(e.getMessage());
+            if (isPaused) {
+                mStatus = DownloadEntry.DownloadStatus.paused;
+                listener.onDownloadPaused(index);
+            } else {
+                mStatus = DownloadEntry.DownloadStatus.error;
+                listener.onDownloadError(e.getMessage());
+            }
         } finally {
             if (connection != null) {
                 connection.disconnect();
             }
         }
+    }
+
+    public void pause() {
+        isPaused = true;
+        Thread.currentThread().interrupt();
+    }
+
+    public boolean isPaused() {
+        return mStatus == DownloadEntry.DownloadStatus.paused || mStatus == DownloadEntry.DownloadStatus.completed;
+    }
+
+    public boolean isRunning() {
+        return mStatus == DownloadEntry.DownloadStatus.downloading;
     }
 
     interface DownloadListener{
@@ -81,6 +116,8 @@ public class DownloadThread implements Runnable {
         void onDownloadCompleted(int index);
 
         void onDownloadError(String message);
+
+        void onDownloadPaused(int index);
     }
 }
 
