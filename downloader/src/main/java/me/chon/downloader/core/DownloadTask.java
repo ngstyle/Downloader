@@ -73,7 +73,11 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
         if (mDownloadThreads != null) {
             for (DownloadThread mDownloadThread : mDownloadThreads) {
                 if (mDownloadThread != null && mDownloadThread.isRunning()) {
-                    mDownloadThread.pause();
+                    if (mEntry.isSupportRange) {
+                        mDownloadThread.pause();
+                    } else {
+                        mDownloadThread.cancel();
+                    }
                 }
             }
         }
@@ -95,7 +99,12 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     private void startSingleDownload() {
+        mEntry.status = DownloadEntry.DownloadStatus.downloading;
+        notifyUpdate(DownloadService.NOTIFY_DOWNLOADING);
 
+        mDownloadThreads = new DownloadThread[1];
+        mDownloadThreads[0] = new DownloadThread(mEntry.url,0,0,0,this);
+        mExecutors.execute(mDownloadThreads[0]);
     }
 
     private void startMultiDownload() {
@@ -150,8 +159,10 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
     @Override
     public synchronized void onProgressChanged(int index, int progress) {
-        int range = mEntry.ranges.get(index) + progress;
-        mEntry.ranges.put(index, range);
+        if (mEntry.isSupportRange) {
+            int range = mEntry.ranges.get(index) + progress;
+            mEntry.ranges.put(index, range);
+        }
 
         mEntry.currentLength += progress;
         if (mEntry.currentLength == mEntry.totalLength){

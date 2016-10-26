@@ -3,6 +3,7 @@ package me.chon.downloader.core;
 import android.os.Environment;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -28,6 +29,8 @@ public class DownloadThread implements Runnable {
     private volatile boolean isCancelled;
     private volatile boolean isError;
 
+    private boolean isSingleDownload;
+
     private DownloadEntry.DownloadStatus mStatus;
 
     public DownloadThread(String url,int index, int startPos, int endPos,DownloadListener listener) {
@@ -35,6 +38,7 @@ public class DownloadThread implements Runnable {
         this.index = index;
         this.startPos = startPos;
         this.endPos = endPos;
+        isSingleDownload = startPos == endPos;
         this.path = Environment.getExternalStorageDirectory() + File.separator +
                 "downloader" + File.separator + url.substring(url.lastIndexOf("/"));
         this.listener = listener;
@@ -47,7 +51,9 @@ public class DownloadThread implements Runnable {
         try {
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
-            connection.setRequestProperty("Range", "bytes=" + startPos + "-" + endPos);
+            if (!isSingleDownload) {
+                connection.setRequestProperty("Range", "bytes=" + startPos + "-" + endPos);
+            }
             connection.setConnectTimeout(Constants.CONNECT_TIME);
             connection.setReadTimeout(Constants.READ_TIME);
             int responseCode = connection.getResponseCode();
@@ -58,6 +64,7 @@ public class DownloadThread implements Runnable {
             }
 
             RandomAccessFile raf;
+            FileOutputStream fos;
             InputStream is;
             if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
                 raf = new RandomAccessFile(file, "rw");
@@ -73,6 +80,20 @@ public class DownloadThread implements Runnable {
                     listener.onProgressChanged(index,len);
                 }
                 raf.close();
+                is.close();
+            } else if (responseCode == HttpURLConnection.HTTP_OK) {
+                fos = new FileOutputStream(file);
+                is = connection.getInputStream();
+                byte[] buffer = new byte[2048];
+                int len = -1;
+                while ((len = is.read(buffer)) != -1) {
+                    if (isPaused || isCancelled || isError) {
+                        break;
+                    }
+                    fos.write(buffer, 0, len);
+                    listener.onProgressChanged(index,len);
+                }
+                fos.close();
                 is.close();
             }
 
