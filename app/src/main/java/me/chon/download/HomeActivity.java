@@ -44,7 +44,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
         if (id == R.id.download) {
 
-            if (mEntry.status == DownloadEntry.DownloadStatus.idle || mEntry.status == DownloadEntry.DownloadStatus.cancelled) {
+            if (mEntry.status == DownloadEntry.DownloadStatus.idle || mEntry.status == DownloadEntry.DownloadStatus.cancelled || mEntry.status == DownloadEntry.DownloadStatus.error) {
                 DownloadManager.getInstance(this).add(mEntry);
             } else if (mEntry.status == DownloadEntry.DownloadStatus.downloading) {
                 DownloadManager.getInstance(this).pause(mEntry);

@@ -26,6 +26,7 @@ public class DownloadThread implements Runnable {
     private final int index;
     private volatile boolean isPaused;
     private volatile boolean isCancelled;
+    private volatile boolean isError;
 
     private DownloadEntry.DownloadStatus mStatus;
 
@@ -65,7 +66,7 @@ public class DownloadThread implements Runnable {
                 byte[] buffer = new byte[2048];
                 int len = -1;
                 while ((len = is.read(buffer)) != -1) {
-                    if (isPaused || isCancelled) {
+                    if (isPaused || isCancelled || isError) {
                         break;
                     }
                     raf.write(buffer, 0, len);
@@ -81,6 +82,9 @@ public class DownloadThread implements Runnable {
             } else if (isCancelled) {
                 mStatus = DownloadEntry.DownloadStatus.cancelled;
                 listener.onDownloadCancelled(index);
+            } else if (isError) {
+                mStatus = DownloadEntry.DownloadStatus.error;
+                listener.onDownloadError(index,"set error manually");
             } else {
                 mStatus = DownloadEntry.DownloadStatus.completed;
                 listener.onDownloadCompleted(index);
@@ -95,7 +99,7 @@ public class DownloadThread implements Runnable {
                 listener.onDownloadCancelled(index);
             } else {
                 mStatus = DownloadEntry.DownloadStatus.error;
-                listener.onDownloadError(e.getMessage());
+                listener.onDownloadError(index,e.getMessage());
             }
         } finally {
             if (connection != null) {
@@ -126,12 +130,21 @@ public class DownloadThread implements Runnable {
         return mStatus == DownloadEntry.DownloadStatus.cancelled || mStatus == DownloadEntry.DownloadStatus.completed;
     }
 
+    public boolean isError() {
+        return mStatus == DownloadEntry.DownloadStatus.error;
+    }
+
+    public void setErrorManually() {
+        isError = true;
+        Thread.currentThread().interrupt();
+    }
+
     interface DownloadListener{
         void onProgressChanged(int index, int progress);
 
         void onDownloadCompleted(int index);
 
-        void onDownloadError(String message);
+        void onDownloadError(int index,String message);
 
         void onDownloadPaused(int index);
 

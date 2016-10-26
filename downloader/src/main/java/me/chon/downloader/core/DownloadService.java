@@ -43,15 +43,7 @@ public class DownloadService extends Service {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             DownloadEntry entry = (DownloadEntry) msg.obj;
-//            switch (entry.status) {
-//                case completed:
-//                    // completed task needs to be removed.
-//                    mDownloadingTasks.remove(entry);
-//                case paused:
-//                case cancelled:
-//                    checkNext();
-//                    break;
-//            }
+
             switch (msg.what) {
                 case NOTIFY_COMPLETED:
                     mDownloadingTasks.remove(entry.id);

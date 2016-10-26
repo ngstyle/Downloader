@@ -24,6 +24,9 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     private final Handler mHandler;
     private ExecutorService mExecutors;
 
+    private volatile boolean isPaused;
+    private volatile boolean isCancelled;
+
     private ConnectThread mConnectThread;
     private DownloadThread[] mDownloadThreads;
 
@@ -62,6 +65,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     public void pause() {
+        isPaused = true;
         if (mConnectThread != null && mConnectThread.isRunning()) {
             mConnectThread.cancel();
         }
@@ -76,6 +80,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     public void cancel() {
+        isCancelled = true;
         if (mConnectThread != null && mConnectThread.isRunning()) {
             mConnectThread.cancel();
         }
@@ -132,10 +137,15 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
     @Override
     public void onConnectError(String message) {
-        mEntry.status = DownloadEntry.DownloadStatus.error;
-        notifyUpdate(DownloadService.NOTIFY_ERROR);
+        if (isPaused || isCancelled) {
+            mEntry.status = isPaused ? DownloadEntry.DownloadStatus.paused : DownloadEntry.DownloadStatus.cancelled;
+            notifyUpdate(DownloadService.NOTIFY_PAUSED_OR_CANCELLED);
+        } else {
+            mEntry.status = DownloadEntry.DownloadStatus.error;
+            notifyUpdate(DownloadService.NOTIFY_ERROR);
+            Trace.e("connect error: " + message);
+        }
 
-        Trace.e("connect error: " + message);
     }
 
     @Override
@@ -159,14 +169,14 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     @Override
-    public void onDownloadCompleted(int index) {
+    public synchronized void onDownloadCompleted(int index) {
         Trace.e("Thread " + index + " completed: " + mEntry.ranges.get(index));
     }
 
     @Override
-    public void onDownloadPaused(int index) {
+    public synchronized void onDownloadPaused(int index) {
         for (DownloadThread mDownloadThread : mDownloadThreads) {
-            if (mDownloadThread != null & !mDownloadThread.isPaused()) {
+            if (mDownloadThread != null && !mDownloadThread.isPaused()) {
                 return;
             }
         }
@@ -176,9 +186,9 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     @Override
-    public void onDownloadCancelled(int index) {
+    public synchronized void onDownloadCancelled(int index) {
         for (DownloadThread mDownloadThread : mDownloadThreads) {
-            if (mDownloadThread != null & !mDownloadThread.isCancelled()) {
+            if (mDownloadThread != null && !mDownloadThread.isCancelled()) {
                 return;
             }
         }
@@ -197,10 +207,23 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     @Override
-    public void onDownloadError(String message) {
-        mEntry.status = DownloadEntry.DownloadStatus.error;
-        notifyUpdate(DownloadService.NOTIFY_ERROR);
-        Trace.e(message);
+    public synchronized void onDownloadError(int index,String message) {
+        // sth wrong may happened this thread
+        boolean isAllThreadError = true;
+
+        for (int i = 0; i < mDownloadThreads.length; i++) {
+            if (mDownloadThreads[i] != null & !mDownloadThreads[i].isError()) {
+                isAllThreadError = false;
+                Trace.e("cancel download thread["+i+"] manually cause net error:" + message);
+                mDownloadThreads[i].setErrorManually();
+            }
+        }
+
+        if (isAllThreadError) {
+            mEntry.status = DownloadEntry.DownloadStatus.error;
+            notifyUpdate(DownloadService.NOTIFY_ERROR);
+            Trace.e(message);
+        }
     }
 
 //    TODO 1.check if support range, get content-length
