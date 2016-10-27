@@ -33,12 +33,10 @@ public class ConnectThread implements Runnable {
             connection.setReadTimeout(Constants.READ_TIME);
             int responseCode = connection.getResponseCode();
             int contentLength = connection.getContentLength();
-            boolean isSupportRange = false;
+            boolean isSupportRange;
             if (responseCode == HttpURLConnection.HTTP_OK){
                 String ranges = connection.getHeaderField("Accept-Ranges");
-                if ("bytes".equals(ranges)){
-                    isSupportRange = true;
-                }
+                isSupportRange = "bytes".equals(ranges);
                 listener.onConnected(isSupportRange, contentLength);
             }else {
                 listener.onConnectError("server error:" + responseCode);

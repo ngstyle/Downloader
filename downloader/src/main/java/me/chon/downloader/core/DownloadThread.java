@@ -95,6 +95,11 @@ public class DownloadThread implements Runnable {
                 }
                 fos.close();
                 is.close();
+            } else {
+                // other response code
+                mStatus = DownloadEntry.DownloadStatus.error;
+                listener.onDownloadError(index,"server error:" + responseCode);
+                return;
             }
 
             if (isPaused) {
@@ -158,6 +163,10 @@ public class DownloadThread implements Runnable {
     public void setErrorManually() {
         isError = true;
         Thread.currentThread().interrupt();
+    }
+
+    public boolean isCompleted() {
+        return mStatus == DownloadEntry.DownloadStatus.completed;
     }
 
     interface DownloadListener{

@@ -29,6 +29,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
     private ConnectThread mConnectThread;
     private DownloadThread[] mDownloadThreads;
+    private int tmpDivide;
 
     public DownloadTask(DownloadEntry entry, Handler mHandler, ExecutorService mExecutors) {
         this.mEntry = entry;
@@ -165,23 +166,49 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
         }
 
         mEntry.currentLength += progress;
-        if (mEntry.currentLength == mEntry.totalLength){
-            mEntry.percent = 100;
-            mEntry.status = DownloadEntry.DownloadStatus.completed;
-            notifyUpdate(DownloadService.NOTIFY_COMPLETED);
-        } else {
-            int percent = (int) (mEntry.currentLength * 100l / mEntry.totalLength);
+        if (mEntry.totalLength > 0) {
+//            int percent = (int) (mEntry.currentLength * 100l / mEntry.totalLength);
+            float percent=(float)(mEntry.currentLength * 100 / mEntry.totalLength / 100);
             if (percent > mEntry.percent) {
                 mEntry.percent = percent;
                 notifyUpdate(DownloadService.NOTIFY_UPDATING);
             }
+        } else {
+            // content-length unknown,have no percent info
+            int divide = mEntry.currentLength/(50*1024);
+            if (divide > tmpDivide){
+                tmpDivide = divide;
+                notifyUpdate(DownloadService.NOTIFY_UPDATING);
+            }
         }
-
     }
 
     @Override
     public synchronized void onDownloadCompleted(int index) {
         Trace.e("Thread " + index + " completed: " + mEntry.ranges.get(index));
+
+        for (DownloadThread mDownloadThread : mDownloadThreads) {
+            if (mDownloadThread != null && !mDownloadThread.isCompleted()) {
+                return;
+            }
+        }
+
+        if (mEntry.totalLength > 0 && mEntry.currentLength != mEntry.totalLength){
+            // unknown error
+            mEntry.status = DownloadEntry.DownloadStatus.error;
+            mEntry.reset();
+            String path = Environment.getExternalStorageDirectory() + File.separator +
+                    "stay4it" + File.separator + mEntry.url.substring(mEntry.url.lastIndexOf("/"));
+            File file = new File(path);
+            if (file.exists()) {
+                file.delete();
+            }
+            notifyUpdate(DownloadService.NOTIFY_ERROR);
+        }else {
+            mEntry.status = DownloadEntry.DownloadStatus.completed;
+            notifyUpdate(DownloadService.NOTIFY_COMPLETED);
+        }
+
     }
 
     @Override

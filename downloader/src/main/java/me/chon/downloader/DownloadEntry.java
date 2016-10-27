@@ -31,7 +31,7 @@ public class DownloadEntry implements Serializable {
     @DatabaseField
     public boolean isSupportRange;
     @DatabaseField
-    public int percent;
+    public float percent;
     @DatabaseField(dataType = DataType.SERIALIZABLE)
     public HashMap<Integer,Integer> ranges;
 
