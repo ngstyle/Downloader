@@ -1,14 +1,11 @@
 package me.chon.downloader;
 
-import android.util.SparseIntArray;
-
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.prefs.Preferences;
 
 /**
  * Created by chon on 2016/10/21.
@@ -31,7 +28,7 @@ public class DownloadEntry implements Serializable {
     @DatabaseField
     public boolean isSupportRange;
     @DatabaseField
-    public float percent;
+    public double percent;
     @DatabaseField(dataType = DataType.SERIALIZABLE)
     public HashMap<Integer,Integer> ranges;
 

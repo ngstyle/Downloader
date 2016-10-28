@@ -1,6 +1,7 @@
 package me.chon.downloader.core;
 
 import android.os.Environment;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -125,7 +126,11 @@ public class DownloadThread implements Runnable {
                 listener.onDownloadCancelled(index);
             } else {
                 mStatus = DownloadEntry.DownloadStatus.error;
-                listener.onDownloadError(index,e.getMessage());
+                String message = e.getMessage();
+                if (TextUtils.isEmpty(message)) {
+                    message = e.toString();
+                }
+                listener.onDownloadError(index,message);
             }
         } finally {
             if (connection != null) {

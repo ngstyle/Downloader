@@ -1,5 +1,7 @@
 package me.chon.downloader.core;
 
+import android.text.TextUtils;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -50,7 +52,11 @@ public class ConnectThread implements Runnable {
             isRunning = false;
         } catch (IOException e) {
             isRunning = false;
-            listener.onConnectError(e.getMessage());
+            String message = e.getMessage();
+            if (TextUtils.isEmpty(message)) {
+                message = e.toString();
+            }
+            listener.onConnectError(message);
         }finally {
             if (connection != null){
                 connection.disconnect();

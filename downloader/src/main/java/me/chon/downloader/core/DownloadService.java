@@ -46,9 +46,9 @@ public class DownloadService extends Service {
 
             switch (msg.what) {
                 case NOTIFY_COMPLETED:
+                case NOTIFY_ERROR:
                     mDownloadingTasks.remove(entry.id);
                 case NOTIFY_PAUSED_OR_CANCELLED:
-                case NOTIFY_ERROR:
                     checkNext();
                     break;
             }
