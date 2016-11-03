@@ -9,8 +9,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 
+import me.chon.downloader.DownloadConfig;
 import me.chon.downloader.DownloadEntry;
-import me.chon.downloader.util.Constants;
 import me.chon.downloader.util.Trace;
 
 /**
@@ -32,11 +32,13 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     private DownloadEntry.DownloadStatus[] mDownloadStatus;
 
     private long mLastTimestamp;
+    private File destFile;
 
     public DownloadTask(DownloadEntry entry, Handler mHandler, ExecutorService mExecutors) {
         this.mEntry = entry;
         this.mHandler = mHandler;
         this.mExecutors = mExecutors;
+        this.destFile = DownloadConfig.getConfig().getDownloadFile(entry.url);
     }
 
     public void start() {
@@ -109,7 +111,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
     private void startSingleDownload() {
         mDownloadThreads = new DownloadThread[1];
-        mDownloadThreads[0] = new DownloadThread(mEntry.url,0,0,0,this);
+        mDownloadThreads[0] = new DownloadThread(mEntry.url, destFile, 0,0,0,this);
         mExecutors.execute(mDownloadThreads[0]);
 
         mDownloadStatus = new DownloadEntry.DownloadStatus[1];
@@ -117,27 +119,27 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
     }
 
     private void startMultiDownload() {
-        int block = mEntry.totalLength / Constants.MAX_DOWNLOAD_THREADS;
+        int block = mEntry.totalLength / DownloadConfig.getConfig().getMaxDownloadThreads();
         int startPos;
         int endPos;
         if (mEntry.ranges == null) {
             mEntry.ranges = new HashMap<>();
-            for (int i = 0; i < Constants.MAX_DOWNLOAD_THREADS; i++) {
+            for (int i = 0; i < DownloadConfig.getConfig().getMaxDownloadThreads(); i++) {
                 mEntry.ranges.put(i,0);
             }
         }
 
-        mDownloadThreads = new DownloadThread[Constants.MAX_DOWNLOAD_THREADS];
-        mDownloadStatus = new DownloadEntry.DownloadStatus[Constants.MAX_DOWNLOAD_THREADS];
-        for (int i = 0; i < Constants.MAX_DOWNLOAD_THREADS; i++) {
+        mDownloadThreads = new DownloadThread[DownloadConfig.getConfig().getMaxDownloadThreads()];
+        mDownloadStatus = new DownloadEntry.DownloadStatus[DownloadConfig.getConfig().getMaxDownloadThreads()];
+        for (int i = 0; i < DownloadConfig.getConfig().getMaxDownloadThreads(); i++) {
             startPos = i * block + mEntry.ranges.get(i);
-            if (i == Constants.MAX_DOWNLOAD_THREADS - 1) {
+            if (i == DownloadConfig.getConfig().getMaxDownloadThreads() - 1) {
                 endPos = mEntry.totalLength;
             } else {
                 endPos = (i + 1) * block - 1;
             }
             if (startPos < endPos) {
-                mDownloadThreads[i] = new DownloadThread(mEntry.url,i,startPos,endPos,this);
+                mDownloadThreads[i] = new DownloadThread(mEntry.url,destFile,i,startPos,endPos,this);
                 mExecutors.execute(mDownloadThreads[i]);
                 mDownloadStatus[i] = DownloadEntry.DownloadStatus.downloading;
             } else {
@@ -205,12 +207,6 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
             // unknown error
             mEntry.status = DownloadEntry.DownloadStatus.error;
             mEntry.reset();
-            String path = Environment.getExternalStorageDirectory() + File.separator +
-                    "stay4it" + File.separator + mEntry.url.substring(mEntry.url.lastIndexOf("/"));
-            File file = new File(path);
-            if (file.exists()) {
-                file.delete();
-            }
             notifyUpdate(DownloadService.NOTIFY_ERROR);
         }else {
             mEntry.status = DownloadEntry.DownloadStatus.completed;
@@ -244,14 +240,6 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
         // reset mEntry,delete local file
         mEntry.reset();
-        String path = Environment.getExternalStorageDirectory() + File.separator +
-                "downloader" + File.separator + mEntry.url.substring(mEntry.url.lastIndexOf("/"));
-        File file = new File(path);
-        if (file.exists()) {
-            if (file.delete())
-                Trace.e("file deleted");
-        }
-
         mEntry.status = DownloadEntry.DownloadStatus.cancelled;
         notifyUpdate(DownloadService.NOTIFY_PAUSED_OR_CANCELLED);
     }

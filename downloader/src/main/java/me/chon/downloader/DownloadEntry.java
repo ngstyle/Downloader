@@ -4,6 +4,7 @@ import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -46,6 +47,10 @@ public class DownloadEntry implements Serializable {
         percent = 0;
         currentLength = 0;
         ranges = null;
+        File file = DownloadConfig.getConfig().getDownloadFile(url);
+        if (file.exists()){
+            file.delete();
+        }
     }
 
     public enum DownloadStatus{

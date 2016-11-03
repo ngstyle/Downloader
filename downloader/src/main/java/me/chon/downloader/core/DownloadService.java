@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import me.chon.downloader.DownloadConfig;
 import me.chon.downloader.db.DBController;
 import me.chon.downloader.util.Constants;
 import me.chon.downloader.notify.DataChanger;
@@ -84,7 +85,23 @@ public class DownloadService extends Service {
                 if (entry.status == DownloadEntry.DownloadStatus.downloading || entry.status == DownloadEntry.DownloadStatus.waiting) {
                     entry.status = DownloadEntry.DownloadStatus.paused;
                     // TODO add a config if recover download needed.
-                    addDownload(entry);
+                    if (DownloadConfig.getConfig().isRecoverDownloadWhenStart()) {
+                        if (entry.isSupportRange){
+                            entry.status = DownloadEntry.DownloadStatus.paused;
+                        }else {
+                            entry.status = DownloadEntry.DownloadStatus.idle;
+                            entry.reset();
+                        }
+                        addDownload(entry);
+                    } else {
+                        if (entry.isSupportRange){
+                            entry.status = DownloadEntry.DownloadStatus.paused;
+                        }else {
+                            entry.status = DownloadEntry.DownloadStatus.idle;
+                            entry.reset();
+                        }
+                        dbController.newOrUpdate(entry);
+                    }
                 }
                 mDataChanger.addToOperateEntryMap(entry.id,entry);
             }
@@ -132,7 +149,7 @@ public class DownloadService extends Service {
     }
 
     private void addDownload(DownloadEntry entry) {
-        if (mDownloadingTasks.size() >= Constants.MAX_DOWNLOAD_TASKS) {
+        if (mDownloadingTasks.size() >= DownloadConfig.getConfig().getMaxDownloadTasks()) {
             mWaitingQueue.offer(entry);
             entry.status = DownloadEntry.DownloadStatus.waiting;
             mDataChanger.postStatus(entry);

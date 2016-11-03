@@ -21,7 +21,7 @@ public class DownloadManager {
     }
 
     private DataChanger mDataChanger;
-    private static final int MIN_TIME_INTERVAL = 200;
+//    private static final int MIN_TIME_INTERVAL = 200;
     private long mLastOperateTime = 0;
 
     private static DownloadManager instance;
@@ -63,7 +63,7 @@ public class DownloadManager {
 
     private boolean checkIfExecutable() {
         long tempTime = System.currentTimeMillis();
-        boolean result = tempTime - mLastOperateTime < MIN_TIME_INTERVAL;
+        boolean result = tempTime - mLastOperateTime < DownloadConfig.getConfig().getMinOperateInterval();
         mLastOperateTime = tempTime;
         return result;
     }

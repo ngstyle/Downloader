@@ -23,7 +23,7 @@ public class DownloadThread implements Runnable {
     private final String url;
     private final int startPos;
     private final int endPos;
-    private final String path;
+    private final File destFile;
     private final DownloadListener listener;
     private final int index;
     private volatile boolean isPaused;
@@ -34,15 +34,14 @@ public class DownloadThread implements Runnable {
 
     private DownloadEntry.DownloadStatus mStatus;
 
-    public DownloadThread(String url,int index, int startPos, int endPos,DownloadListener listener) {
+    public DownloadThread(String url, File destFile, int index, int startPos, int endPos, DownloadListener listener) {
         this.url = url;
         this.index = index;
         this.startPos = startPos;
+        this.destFile = destFile;
         this.endPos = endPos;
-        isSingleDownload = startPos == endPos;
-        this.path = Environment.getExternalStorageDirectory() + File.separator +
-                "downloader" + File.separator + url.substring(url.lastIndexOf("/"));
         this.listener = listener;
+        isSingleDownload = startPos == endPos;
     }
 
     @Override
@@ -58,17 +57,12 @@ public class DownloadThread implements Runnable {
             connection.setConnectTimeout(Constants.CONNECT_TIME);
             connection.setReadTimeout(Constants.READ_TIME);
             int responseCode = connection.getResponseCode();
-            File file = new File(path);
-            File parentFile = file.getParentFile();
-            if (!parentFile.exists()) {
-                parentFile.mkdirs();
-            }
 
             RandomAccessFile raf;
             FileOutputStream fos;
             InputStream is;
             if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
-                raf = new RandomAccessFile(file, "rw");
+                raf = new RandomAccessFile(destFile, "rw");
                 raf.seek(startPos);
                 is = connection.getInputStream();
                 byte[] buffer = new byte[2048];
@@ -83,7 +77,7 @@ public class DownloadThread implements Runnable {
                 raf.close();
                 is.close();
             } else if (responseCode == HttpURLConnection.HTTP_OK) {
-                fos = new FileOutputStream(file);
+                fos = new FileOutputStream(destFile);
                 is = connection.getInputStream();
                 byte[] buffer = new byte[2048];
                 int len = -1;
