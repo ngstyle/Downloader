@@ -57,5 +57,15 @@ public class DBController {
             return null;
         }
     }
+
+    public void deleteById(String id) {
+        Dao<DownloadEntry, String> dao;
+        try {
+            dao = mDBhelper.getDao(DownloadEntry.class);
+            dao.deleteById(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
 

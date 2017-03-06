@@ -3,6 +3,8 @@ package me.chon.downloader;
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.File;
+
 import me.chon.downloader.core.DownloadService;
 import me.chon.downloader.notify.DataChanger;
 import me.chon.downloader.notify.DataWatcher;
@@ -92,4 +94,16 @@ public class DownloadManager {
         return mDataChanger.queryDownloadEntryByID(id);
     }
 
+    public boolean containsDownloadEntry(String id) {
+        return DataChanger.getInstance(mContext).containsDownloadEntry(id);
+    }
+
+    public void deleteDownloadEntry(boolean forceDelete,String id) {
+        DataChanger.getInstance(mContext).deleteDownloadEntry(id);
+        if (forceDelete){
+            File file = DownloadConfig.getConfig().getDownloadFile(id);
+            if (file.exists())
+                file.delete();
+        }
+    }
 }

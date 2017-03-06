@@ -4,6 +4,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.io.File;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 
 import me.chon.downloader.DownloadConfig;
 import me.chon.downloader.DownloadEntry;
+import me.chon.downloader.util.TickTack;
 import me.chon.downloader.util.Trace;
 
 /**
@@ -31,7 +33,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
     private DownloadEntry.DownloadStatus[] mDownloadStatus;
 
-    private long mLastTimestamp;
+//    private long mLastTimestamp;
     private File destFile;
 
     public DownloadTask(DownloadEntry entry, Handler mHandler, ExecutorService mExecutors) {
@@ -43,6 +45,12 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
     public void start() {
         if (mEntry.totalLength > 0) {
+            if (!destFile.exists()) {
+                // if the file removed
+                Trace.e("already got contentLength,but file deleted");
+                mEntry.reset();
+                start();
+            }
             Trace.e("no need to check if support range and totalLength");
             startDownload();
         } else {
@@ -178,14 +186,22 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 
         mEntry.currentLength += progress;
 
-        long timeStamp = System.currentTimeMillis();
-        if (timeStamp - mLastTimestamp > 1000) {
-            mLastTimestamp = timeStamp;
+//        long timeStamp = System.currentTimeMillis();
+//        if (timeStamp - mLastTimestamp > 1000) {
+//            mLastTimestamp = timeStamp;
+//            if (mEntry.totalLength > 0) {
+//                double percent =  mEntry.currentLength * 10000l / mEntry.totalLength / 100.0;
+//                mEntry.percent = percent;
+//            }
+            // else content-length unknown,have no percent info
+//            notifyUpdate(DownloadService.NOTIFY_UPDATING);
+//        }
+
+        if (TickTack.getInstance().needToNotify()){
             if (mEntry.totalLength > 0) {
                 double percent =  mEntry.currentLength * 10000l / mEntry.totalLength / 100.0;
                 mEntry.percent = percent;
             }
-            // else content-length unknown,have no percent info
             notifyUpdate(DownloadService.NOTIFY_UPDATING);
         }
     }
@@ -213,7 +229,7 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
             mEntry.percent = 100;
             notifyUpdate(DownloadService.NOTIFY_COMPLETED);
         }
-
+        // TODO if need delete record
     }
 
     @Override
@@ -268,4 +284,5 @@ public class DownloadTask implements ConnectThread.ConnectListener, DownloadThre
 //    TODO 3.1 compute the block size per thread
 //    TODO 3.2 execute sub-threads
 //    TODO 3.3 combine the progress and notify
+//    TODO 4.net change,SD card remove(broadcast)
 }

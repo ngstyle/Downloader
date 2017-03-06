@@ -138,9 +138,9 @@ public class DownloadThread implements Runnable {
         Thread.currentThread().interrupt();
     }
 
-    public boolean isPaused() {
-        return mStatus == DownloadEntry.DownloadStatus.paused || mStatus == DownloadEntry.DownloadStatus.completed;
-    }
+//    public boolean isPaused() {
+//        return mStatus == DownloadEntry.DownloadStatus.paused || mStatus == DownloadEntry.DownloadStatus.completed;
+//    }
 
     public boolean isRunning() {
         return mStatus == DownloadEntry.DownloadStatus.downloading;
@@ -151,22 +151,22 @@ public class DownloadThread implements Runnable {
         Thread.currentThread().interrupt();
     }
 
-    public boolean isCancelled() {
-        return mStatus == DownloadEntry.DownloadStatus.cancelled || mStatus == DownloadEntry.DownloadStatus.completed;
-    }
-
-    public boolean isError() {
-        return mStatus == DownloadEntry.DownloadStatus.error;
-    }
+//    public boolean isCancelled() {
+//        return mStatus == DownloadEntry.DownloadStatus.cancelled || mStatus == DownloadEntry.DownloadStatus.completed;
+//    }
+//
+//    public boolean isError() {
+//        return mStatus == DownloadEntry.DownloadStatus.error;
+//    }
 
     public void setErrorManually() {
         isError = true;
         Thread.currentThread().interrupt();
     }
 
-    public boolean isCompleted() {
-        return mStatus == DownloadEntry.DownloadStatus.completed;
-    }
+//    public boolean isCompleted() {
+//        return mStatus == DownloadEntry.DownloadStatus.completed;
+//    }
 
     interface DownloadListener{
         void onProgressChanged(int index, int progress);

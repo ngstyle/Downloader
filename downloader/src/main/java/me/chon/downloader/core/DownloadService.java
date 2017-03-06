@@ -83,27 +83,27 @@ public class DownloadService extends Service {
         if (entries != null) {
             for (DownloadEntry entry : entries) {
                 if (entry.status == DownloadEntry.DownloadStatus.downloading || entry.status == DownloadEntry.DownloadStatus.waiting) {
-                    entry.status = DownloadEntry.DownloadStatus.paused;
-                    // TODO add a config if recover download needed.
+//                    entry.status = DownloadEntry.DownloadStatus.paused;
+                    // add a config if recover download needed.
                     if (DownloadConfig.getConfig().isRecoverDownloadWhenStart()) {
-                        if (entry.isSupportRange){
+                        if (entry.isSupportRange) {
                             entry.status = DownloadEntry.DownloadStatus.paused;
-                        }else {
+                        } else {
                             entry.status = DownloadEntry.DownloadStatus.idle;
                             entry.reset();
                         }
                         addDownload(entry);
                     } else {
-                        if (entry.isSupportRange){
+                        if (entry.isSupportRange) {
                             entry.status = DownloadEntry.DownloadStatus.paused;
-                        }else {
+                        } else {
                             entry.status = DownloadEntry.DownloadStatus.idle;
                             entry.reset();
                         }
                         dbController.newOrUpdate(entry);
                     }
                 }
-                mDataChanger.addToOperateEntryMap(entry.id,entry);
+                mDataChanger.addToOperateEntryMap(entry.id, entry);
             }
         }
 
@@ -159,7 +159,8 @@ public class DownloadService extends Service {
     }
 
     private void startDownload(DownloadEntry entry) {
-        DownloadTask task = new DownloadTask(entry, mHandler,mExecutors);
+        // TODO check if enable to download (3G, no memory, no sd)
+        DownloadTask task = new DownloadTask(entry, mHandler, mExecutors);
         task.start();
         mDownloadingTasks.put(entry.id, task);
     }
@@ -183,20 +184,20 @@ public class DownloadService extends Service {
         DownloadTask task = mDownloadingTasks.remove(entry.id);
         if (task != null) {
             task.cancel();
-        } else {
-            mWaitingQueue.remove(entry);
+        } else if (mWaitingQueue.remove(entry)) {
+            // in waiting queue
             entry.status = DownloadEntry.DownloadStatus.cancelled;
             mDataChanger.postStatus(entry);
         }
     }
 
     private void pauseAllDownload() {
-        for(Map.Entry<String,DownloadTask> entry:mDownloadingTasks.entrySet()) {
+        for (Map.Entry<String, DownloadTask> entry : mDownloadingTasks.entrySet()) {
             entry.getValue().pause();
         }
         mDownloadingTasks.clear();
 
-        while(mWaitingQueue.iterator().hasNext()) {
+        while (mWaitingQueue.iterator().hasNext()) {
             DownloadEntry entry = mWaitingQueue.poll();
             entry.status = DownloadEntry.DownloadStatus.paused;
             mDataChanger.postStatus(entry);

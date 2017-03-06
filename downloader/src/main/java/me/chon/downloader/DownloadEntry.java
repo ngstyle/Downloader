@@ -8,6 +8,9 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
 
+import me.chon.downloader.db.DBController;
+import me.chon.downloader.notify.DataChanger;
+
 /**
  * Created by chon on 2016/10/21.
  * What? How? Why?
@@ -46,6 +49,7 @@ public class DownloadEntry implements Serializable {
     public void reset() {
         percent = 0;
         currentLength = 0;
+        totalLength = 0;
         ranges = null;
         File file = DownloadConfig.getConfig().getDownloadFile(url);
         if (file.exists()){

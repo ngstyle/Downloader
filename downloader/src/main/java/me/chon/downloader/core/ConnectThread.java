@@ -18,7 +18,7 @@ public class ConnectThread implements Runnable {
     private final ConnectListener listener;
     private volatile boolean isRunning;
 
-    public ConnectThread(String url, ConnectListener listener){
+    public ConnectThread(String url, ConnectListener listener) {
         this.url = url;
         this.listener = listener;
     }
@@ -28,19 +28,21 @@ public class ConnectThread implements Runnable {
         isRunning = true;
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection)new URL(url).openConnection();
+            connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
+            // FIXME add the header,while download big file(>Integer.MAX_VALUE),contentLength will return -1
 //            connection.setRequestProperty("Range","bytes=0-"+Integer.MAX_VALUE);
             connection.setConnectTimeout(Constants.CONNECT_TIME);
             connection.setReadTimeout(Constants.READ_TIME);
             int responseCode = connection.getResponseCode();
             int contentLength = connection.getContentLength();
             boolean isSupportRange;
-            if (responseCode == HttpURLConnection.HTTP_OK){
+            // TODO redirect,get the real url.
+            if (responseCode == HttpURLConnection.HTTP_OK) {
                 String ranges = connection.getHeaderField("Accept-Ranges");
                 isSupportRange = "bytes".equals(ranges);
                 listener.onConnected(isSupportRange, contentLength);
-            }else {
+            } else {
                 listener.onConnectError("server error:" + responseCode);
             }
 //            if (responseCode == HttpURLConnection.HTTP_PARTIAL){
@@ -57,8 +59,8 @@ public class ConnectThread implements Runnable {
                 message = e.toString();
             }
             listener.onConnectError(message);
-        }finally {
-            if (connection != null){
+        } finally {
+            if (connection != null) {
                 connection.disconnect();
             }
         }
@@ -72,7 +74,7 @@ public class ConnectThread implements Runnable {
         Thread.currentThread().interrupt();
     }
 
-    interface ConnectListener{
+    interface ConnectListener {
         void onConnected(boolean isSupportRange, int totalLength);
 
         void onConnectError(String message);

@@ -18,6 +18,7 @@ import me.chon.downloader.db.DBController;
 
 public class DataChanger extends Observable {
     private Context mContext;
+    // all operated record,may eat up a lot of memory
     private LinkedHashMap<String,DownloadEntry> mOperatedEntries;
 
     private DataChanger(Context context) {
@@ -70,5 +71,10 @@ public class DataChanger extends Observable {
 
     public boolean containsDownloadEntry(String id) {
         return mOperatedEntries.containsKey(id);
+    }
+
+    public void deleteDownloadEntry(String id){
+        mOperatedEntries.remove(id);
+        DBController.getInstance(mContext).deleteById(id);
     }
 }

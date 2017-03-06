@@ -16,7 +16,7 @@ public class DownloadConfig {
 
     private int max_download_tasks = 3;
     private int max_download_threads = 3;
-    private File downloadDir = null;
+    private File downloadDir;
     private int min_operate_interval = 200;
     private boolean recoverDownloadWhenStart = true;
     // FIXME: no implement
